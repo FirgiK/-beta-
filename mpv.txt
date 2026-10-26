@@ -1,0 +1,75 @@
+================================================================================
+DOKUMEN SPESIFIKASI KEBUTUHAN APLIKASI (MVP)
+SISTEM STOK GUDANG - PT PAPER ASTURO INDONESIA
+================================================================================
+
+1. SPESIFIKASI TEKNIS
+--------------------------------------------------------------------------------
+- Platform Target  : Desktop Application (Windows .exe)
+- Framework        : Flutter
+- Database         : SQLite (Penyimpanan lokal)
+- Mode Operasi     : 100% Offline (Tanpa koneksi internet/server)
+- Pengguna         : Single-user (Admin Gudang)
+
+
+2. FITUR UTAMA
+--------------------------------------------------------------------------------
+F01. Manajemen Master Data
+     - CRUD (Tambah, Edit, Hapus) daftar barang.
+     - Atribut wajib: Nama Barang, Nomor Barang, Kategori, Satuan.
+     - 4 Kategori Laporan: Bahan Baku, Obat, Kado, Pribadi.
+
+F02. Migrasi / Import Data Awal
+     - Fasilitas import file Excel untuk memasukkan data barang secara massal.
+     - Import angka Stok Akhir bulan sebelumnya untuk dikunci sebagai Stok Awal di aplikasi (hanya dilakukan sekali di awal setup tiap bulan/periode baru).
+
+F03. Input Transaksi Harian (Sistem Draft/Keranjang)
+     - Menggunakan form input dengan dropdown autocomplete (Nama/No Barang).
+     - Barang yang diinput akan masuk ke "tabel sementara" (keranjang) di layar.
+     - Admin dapat menginput banyak barang sekaligus, lalu menekan 1 tombol "Simpan Semua" untuk mengeksekusi ke database.
+     - Logika Mutasi:
+       * Barang Masuk normal = Jenis "Masuk".
+       * Retur               = Jenis "Masuk", isi keterangan "Retur".
+       * Barang Keluar       = Jenis "Keluar".
+       * Rusak (RS)          = Jenis "Keluar", isi keterangan "Rusak".
+
+F04. Generator Laporan & Export Excel
+     - Filter pencarian laporan berdasarkan Rentang Tanggal (Tanggal Mulai s/d Tanggal Akhir) dan Kategori.
+     - Sistem melakukan kalkulasi otomatis tanpa edit manual.
+     - Menampilkan tabel Rekapan: Nama, Satuan, Stok Awal, Total Masuk, Total Keluar, Stok Akhir.
+     - Tombol "Export to .xlsx" untuk menghasilkan file Excel fisik yang siap diserahkan ke manajemen.
+
+
+3. STRUKTUR DATABASE (SQLITE)
+--------------------------------------------------------------------------------
+Tabel 1: master_barang
+- id (Integer, PK, Auto Increment)
+- nama_barang (Text)
+- no_barang (Text)
+- kategori (Text) 
+- satuan (Text) 
+
+Tabel 2: transaksi
+- id (Integer, PK, Auto Increment)
+- barang_id (Integer, FK)
+- tanggal (Date)
+- jenis (Text - Enum: "Masuk" / "Keluar")
+- jumlah (Real/Decimal)
+- keterangan (Text)
+
+Tabel 3: stok_awal
+- id (Integer, PK, Auto Increment)
+- barang_id (Integer, FK)
+- periode_bulan (Text - Format: YYYY-MM)
+- jumlah (Real/Decimal)
+
+
+4. RUMUS KALKULASI SISTEM
+--------------------------------------------------------------------------------
+Stok Akhir = Stok Awal (pada periode bulan terkait) 
+             + Total Penjumlahan Transaksi "Masuk" (pada rentang tanggal filter) 
+             - Total Penjumlahan Transaksi "Keluar" (pada rentang tanggal filter)
+
+================================================================================
+AKHIR DOKUMEN
+================================================================================

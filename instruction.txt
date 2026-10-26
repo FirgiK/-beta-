@@ -1,0 +1,59 @@
+================================================================================
+APPLICATION DEVELOPMENT INSTRUCTIONS (FOR AI AGENT)
+================================================================================
+
+MAIN OBJECTIVE:
+Build a Windows desktop application using Flutter for offline warehouse inventory management. Focus on core functionality, SQLite stability on desktop, and highly efficient mass data entry.
+
+1. TECH STACK & MANDATORY DEPENDENCIES
+- Framework: Flutter (Target: Windows Desktop).
+- Database: SQLite (Use the `sqflite_common_ffi` package for Windows desktop support).
+- State Management: Provider or Riverpod (choose one and maintain consistency).
+- Excel Handling: Use the `excel` or `syncfusion_flutter_xlsio` package for import/export features.
+- UI Components: Use standard Material Design. Implement robust DataGrid/DataTable components for data entry and display to closely mimic an Excel spreadsheet experience.
+
+2. DATABASE STRUCTURE (SQLITE)
+Implement the following relational schema. Use FOREIGN KEY constraints and ensure future table modifications can be handled via the `onUpgrade` migration method.
+
+Table: master_kategori
+- id (INTEGER, PRIMARY KEY, AUTOINCREMENT)
+- nama_kategori (TEXT)
+
+Table: master_barang
+- id (INTEGER, PRIMARY KEY, AUTOINCREMENT)
+- nama_barang (TEXT)
+- no_barang (TEXT)
+- kategori_id (INTEGER, FOREIGN KEY referencing master_kategori)
+- satuan (TEXT)
+
+Table: transaksi
+- id (INTEGER, PRIMARY KEY, AUTOINCREMENT)
+- barang_id (INTEGER, FOREIGN KEY referencing master_barang)
+- tanggal (TEXT, format YYYY-MM-DD)
+- jenis (TEXT, restrict values to: "Masuk", "Keluar")
+- jumlah (REAL)
+- keterangan (TEXT)
+
+Table: stok_awal
+- id (INTEGER, PRIMARY KEY, AUTOINCREMENT)
+- barang_id (INTEGER, FOREIGN KEY referencing master_barang)
+- periode_bulan (TEXT, format YYYY-MM)
+- jumlah (REAL)
+
+3. CODING GUIDELINES
+- Modularity: Strictly separate database logic (Repositories), state management (Controllers/Providers), and UI (Views). Never write raw SQL queries directly inside UI files.
+- Desktop Optimization: Ensure forms and tables are fully responsive to desktop window resizing. Optimize keyboard navigation (using Tab and Enter keys) on input forms to speed up rapid, sequential data entry without a mouse.
+- Error Handling: Catch SQLite exceptions and provide clear UI feedback (Snackbars or Dialogs) for errors such as duplicate items or invalid data types.
+
+4. BUSINESS LOGIC & WORKFLOW (MUST FOLLOW)
+- Master Data Module: Build CRUD interfaces for `master_kategori` and `master_barang`.
+- Import Module: Extract data from a .xlsx file, read the rows, and insert them into `master_barang` and `stok_awal`. Automatically skip rows with empty item names.
+- Transaction Module (Draft/Cart System): Build an input form with an autocomplete/searchable dropdown for items. When the user submits a single entry, append it to a temporary UI List (draft table) instead of hitting the database immediately. Provide a single "Save All" button to execute a batch SQL INSERT for all items in the draft.
+- Calculation & Report Module: Create query functions to filter data by Date Range and Category. Calculate the final dynamic stock using this logic: SUM(stok_awal) + SUM(incoming transactions) - SUM(outgoing transactions).
+- Export Module: Render the calculated report into a physical .xlsx file with a clean layout and save it to the local OS directory.
+
+5. STRICT CONSTRAINTS
+- Do NOT build any login, registration, or authentication features.
+- Do NOT use internet or cloud APIs. The application must function 100% offline.
+- Do NOT hardcode category names in the UI. Always fetch categories dynamically from the `master_kategori` table.
+================================================================================
